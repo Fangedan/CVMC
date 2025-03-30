@@ -1,0 +1,46 @@
+"""
+Project Dependencies File
+-------------------------
+This file lists the required Python packages for a **multimodal deep learning project** 
+that processes **audio and visual data**. The listed dependencies support deep learning, 
+machine learning, data processing, and model evaluation.
+
+Required Packages:
+1. **Deep Learning & PyTorch**
+   - `torch`: Core PyTorch library for building and training neural networks.
+   - `torchaudio`: Audio processing utilities for PyTorch.
+   - `torchvision`: Tools for processing image data, including datasets and pre-trained models.
+
+2. **Scientific Computing & Machine Learning**
+   - `numpy`: Numerical computations and large array manipulations.
+   - `scipy`: Scientific computing tools, including signal processing.
+   - `scikit-learn`: Machine learning algorithms for classification, regression, and clustering.
+
+3. **Audiovisual Processing**
+   - `opencv-python`: OpenCV library for image and video processing.
+   - `python_speech_features`: Extracts speech features such as **MFCCs, filter banks, and spectrograms**.
+
+4. **Data Handling & Progress Tracking**
+   - `tqdm`: Displays progress bars for long-running operations (e.g., training loops).
+   - `tensorboard`: Monitors training metrics like loss, accuracy, and performance over time.
+
+5. **External Data Downloading**
+   - `youtube-dl`: Downloads videos from YouTube and other sources (useful for dataset creation).
+
+Usage:
+- Ensure all dependencies are installed using `pip install -r requirements.txt` (if stored in a requirements file).
+- These libraries support a **deep learning model** that combines **audio and visual data** for tasks like 
+  **speech recognition, lip-reading, or video classification**.
+"""
+
+torch
+torchaudio
+numpy
+scipy
+scikit-learn
+tqdm
+opencv-python
+torchvision
+youtube-dl
+tensorboard
+python_speech_features
