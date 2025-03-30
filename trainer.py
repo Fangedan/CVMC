@@ -114,6 +114,7 @@ def main(args):
             if mAPs[-1] > bestmAP:
                 bestmAP = mAPs[-1]
                 s.saveParameters(args.modelSavePath + "/best.model")
+                torch.save(s.state_dict(), os.path.join(args.modelSavePath, "final_model.pth"))  # Save the model here
             print(time.strftime("%Y-%m-%d %H:%M:%S"), "%d epoch, mAP %2.2f%%, bestmAP %2.2f%%"%(epoch, mAPs[-1], max(mAPs)))
             scoreFile.write("%d epoch, LR %f, LOSS %f, mAP %2.2f%%, bestmAP %2.2f%%\n"%(epoch, lr, loss, mAPs[-1], max(mAPs)))
             scoreFile.flush()
