@@ -1,71 +1,84 @@
-import cv2
 import torch
-from torchvision import transforms
+import torch.nn as nn
+import cv2
 import numpy as np
-import time
+from torchvision import models, transforms
 
-# Assuming you have a pre-trained model (or the model is loaded)
-class TalkNetASDModel:
-    def __init__(self, model_path):
-        # Initialize your model (Load the pre-trained weights)
-        self.model = torch.load(model_path)
-        self.model.eval()
+# Load a pre-trained ResNet model
+model = models.resnet18(pretrained=True)
 
-    def detect_speaker(self, frame):
-        # This is where you would preprocess the frame and run it through the model
-        # For now, we will just return a dummy prediction
-        # You should adapt this to the model you are using
-        # Convert frame to a tensor and preprocess it
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+# Modify the last fully connected layer for your task (e.g., 2 classes)
+model.fc = nn.Linear(model.fc.in_features, 2)  # 2 classes (Speaker 1 vs. Speaker 2)
+
+# Set model to evaluation mode
+model.eval()
+
+# OpenCV to capture video from your webcam
+cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    print("Error: Could not access the webcam.")
+    exit()
+
+# Load OpenCV face detection classifier
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    
+    if not ret:
+        print("Error: Failed to capture image.")
+        break
+    
+    # Convert the frame to grayscale for face detection
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Detect faces in the frame
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    # Initialize a variable to track the highest confidence
+    max_confidence = -1
+    active_face = None  # This will hold the coordinates and data of the active speaker
+
+    # Loop over each detected face
+    for (x, y, w, h) in faces:
+        # Crop the face from the frame
+        face = frame[y:y+h, x:x+w]
         
-        input_tensor = transform(frame)
-        input_tensor = input_tensor.unsqueeze(0).cuda()  # Assuming you're using CUDA
+        # Preprocess the face for the model
+        input_face = cv2.resize(face, (224, 224))  # Resize to 224x224 for ResNet input
+        input_face = input_face.astype(np.float32) / 255.0  # Normalize between 0-1
+        input_face = input_face.transpose((2, 0, 1))  # Change to CxHxW format (channels first)
+        input_tensor = torch.tensor(input_face).float()  # Convert to tensor
+        input_tensor = input_tensor.unsqueeze(0)  # Add batch dimension
 
+        # Pass the face through the model to get the active speaker and confidence score
         with torch.no_grad():
-            output = self.model(input_tensor)
-            # Here you can extract the active speaker or confidence score from the output
-            return output.argmax(dim=1)  # Dummy output: replace with actual logic
+            output = model(input_tensor)
+            _, predicted_class = torch.max(output, 1)
+            confidence = torch.softmax(output, dim=1)[0][predicted_class].item()
 
-def main():
-    # Load your model
-    model_path = 'path_to_your_model.pth'  # Replace with your actual model path
-    model = TalkNetASDModel(model_path)
+        # If this face has the highest confidence, assign it as the active speaker
+        if confidence > max_confidence:
+            max_confidence = confidence
+            active_face = (x, y, w, h, predicted_class, confidence)
 
-    # Open webcam (0 is default webcam, change it if necessary)
-    cap = cv2.VideoCapture(0)
+    # If an active face has been detected (the one with the highest confidence), draw it
+    if active_face:
+        x, y, w, h, predicted_class, confidence = active_face
+        speaker = "Speaker 1" if predicted_class == 0 else "Speaker 2"
+        color = (0, 255, 0)  # Green box for the active speaker
+        cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+        cv2.putText(frame, f"{speaker} ({confidence:.2f})", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
 
-    if not cap.isOpened():
-        print("Error: Could not open webcam")
-        return
+    # Display the frame
+    cv2.imshow("Active Speaker Detection", frame)
 
-    while True:
-        # Capture frame-by-frame
-        ret, frame = cap.read()
+    # Break the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-        if not ret:
-            break
-
-        # Detect active speaker in the frame
-        prediction = model.detect_speaker(frame)
-
-        # Display the prediction (active speaker or confidence score)
-        cv2.putText(frame, f'Active Speaker: {prediction.item()}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        
-        # Display the resulting frame
-        cv2.imshow('Active Speaker Detection', frame)
-
-        # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release the capture when done
-    cap.release()
-    cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    main()
+# Release the capture and close OpenCV windows
+cap.release()
+cv2.destroyAllWindows()
