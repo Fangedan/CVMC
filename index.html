@@ -18,7 +18,7 @@
             justify-content: center;
             margin-top: 20px;
         }
-        video {
+        img {
             border: 2px solid black;
             border-radius: 10px;
         }
@@ -32,13 +32,13 @@
 <body>
     <h1>Live Speaker Detection</h1>
     <div id="video-container">
-        <img id="video-feed" src="/video_feed" width="640" height="480">
+        <img id="video-feed" src="http://localhost:5000/video_feed" width="640" height="480">
     </div>
     <div id="status">Waiting for speaker detection...</div>
     
     <script>
         function updateStatus() {
-            fetch('/speaker_status')
+            fetch('http://localhost:5000/speaker_status')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('status').innerText = data.status;
@@ -46,7 +46,7 @@
                 .catch(error => console.error('Error fetching speaker status:', error));
         }
         
-        setInterval(updateStatus, 1000); // Update speaker status every second
+        setInterval(updateStatus, 1000);
     </script>
 </body>
 </html>
