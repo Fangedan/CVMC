@@ -1,75 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Live Speaker Detection</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Speaker Detection</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
     <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-teal.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-        body {font-family: "Roboto", sans-serif;}
+        body { font-family: "Roboto", sans-serif; }
+        .w3-bar-block .w3-bar-item { padding: 16px; font-weight: bold; }
+        .section { padding: 64px 32px; }
+        .smooth-scroll { scroll-behavior: smooth; }
     </style>
 </head>
-<body>
+<body class="smooth-scroll">
 
-<nav class="w3-sidebar w3-bar-block w3-collapse w3-card w3-animate-left" style="z-index:3;width:250px;" id="mySidebar">
-    <a class="w3-bar-item w3-button w3-border-bottom w3-large" href="#"><b>Menu</b></a>
+<nav class="w3-sidebar w3-bar-block w3-collapse w3-animate-left w3-card" style="z-index:3;width:250px;" id="mySidebar">
+    <a class="w3-bar-item w3-button w3-border-bottom w3-large" href="#"><img src="logo.png" style="width:80%;"></a>
     <a class="w3-bar-item w3-button w3-teal" href="#intro">Introduction</a>
-    <a class="w3-bar-item w3-button" href="#detection">Live Speaker Detection</a>
+    <a class="w3-bar-item w3-button" href="#computer-vision">Computer Vision</a>
+    <a class="w3-bar-item w3-button" href="#speaker-detection">Active Speaker Detection</a>
     <a class="w3-bar-item w3-button" href="#applications">Applications</a>
-    <a class="w3-bar-item w3-button" href="#learnings">What I Learned</a>
-    <a class="w3-bar-item w3-button" href="#future">Future Possibilities</a>
+    <a class="w3-bar-item w3-button" href="#github-commits">GitHub Commits</a>
+    <a class="w3-bar-item w3-button" href="#lessons-learned">Lessons Learned</a>
 </nav>
 
-<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
 <div class="w3-main" style="margin-left:250px;">
 
-    <header class="w3-container w3-theme" style="padding:64px 32px">
-        <h1 class="w3-xxxlarge">Live Speaker Detection</h1>
-    </header>
+<header class="w3-container w3-theme" style="padding:64px 32px" id="intro">
+    <h1 class="w3-xxxlarge">Active Speaker Detection</h1>
+</header>
 
-    <div class="w3-container" style="padding:32px" id="intro">
-        <h2>Introduction to Computer Vision & Multimodal Computing</h2>
-        <p>This section explains how computer vision and multimodal computing enable machines to interpret sensory data.</p>
-        <img src="placeholder.jpg" style="width:100%" alt="Computer Vision Example">
+<section class="w3-container section" id="computer-vision">
+    <h2>Introduction to Computer Vision & Multimodal Computing</h2>
+    <p>Computer vision is a field of artificial intelligence that enables machines to interpret and understand visual data. Multimodal computing enhances this by integrating various forms of input, such as audio and video, to improve accuracy in tasks like object recognition, speech analysis, and human interaction understanding.</p>
+</section>
+
+<section class="w3-container section" id="speaker-detection">
+    <h2>Active Speaker Detection</h2>
+    <p>Active speaker detection is a technique used to identify which person is speaking in a video using a combination of audio and visual cues. This technology is crucial for applications in video conferencing, accessibility tools, and human-computer interaction.</p>
+    <div class="w3-center">
+        <img src="speaker_detection_demo.jpg" style="width:80%;border-radius:10px;">
     </div>
+</section>
 
-    <div class="w3-container" style="padding:32px" id="detection">
-        <h2>Live Speaker Detection</h2>
-        <p>Live Speaker Detection uses AI models to determine the active speaker in real-time video streams.</p>
-        <video controls style="width:100%">
-            <source src="demo.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+<section class="w3-container section" id="applications">
+    <h2>Applications of Active Speaker Detection</h2>
+    <p>Active speaker detection has numerous applications, including automatic transcription services, video editing automation, enhanced accessibility for the hearing impaired, and real-time speaker tracking in conference calls.</p>
+    <div class="w3-row">
+        <div class="w3-col m6 w3-padding">
+            <img src="application1.jpg" style="width:100%;border-radius:10px;">
+        </div>
+        <div class="w3-col m6 w3-padding">
+            <img src="application2.jpg" style="width:100%;border-radius:10px;">
+        </div>
     </div>
+</section>
 
-    <div class="w3-container" style="padding:32px" id="applications">
-        <h2>Uses and Applications</h2>
-        <p>This technology has applications in transcription, video conferencing, and accessibility tools.</p>
-        <img src="applications.jpg" style="width:100%" alt="Applications">
-    </div>
+<section class="w3-container section" id="github-commits">
+    <h2>GitHub Commits Summary</h2>
+    <p>This section provides a summary of the key commits made in the project repository:</p>
+    <ul class="w3-ul w3-border">
+        <li><strong>Initial Commit:</strong> Set up project structure and base functionality.</li>
+        <li><strong>Added Face Detection:</strong> Implemented OpenCV for identifying faces in the video.</li>
+        <li><strong>Integrated Audio Analysis:</strong> Combined audio data to enhance speaker identification.</li>
+        <li><strong>Optimized Model Performance:</strong> Improved real-time processing speed and accuracy.</li>
+        <li><strong>Final Enhancements:</strong> Refined UI, added error handling, and improved model confidence.</li>
+    </ul>
+</section>
 
-    <div class="w3-container" style="padding:32px" id="learnings">
-        <h2>What I Learned</h2>
-        <p>Developing this project helped me understand deep learning models, real-time video processing, and user interface design.</p>
-    </div>
+<section class="w3-container section" id="lessons-learned">
+    <h2>Lessons Learned as a Solo Developer</h2>
+    <p>Developing this project solo allowed me to deepen my understanding of machine learning, computer vision, and software engineering principles. I gained experience in debugging complex models, optimizing real-time performance, and structuring scalable applications.</p>
+</section>
 
-    <div class="w3-container" style="padding:32px" id="future">
-        <h2>Future Possibilities</h2>
-        <p>This project paves the way for advancements in automated video analysis, accessibility, and interactive media.</p>
-    </div>
-
-    <footer class="w3-container w3-theme" style="padding:32px">
-        <p>Project by [Your Name]</p>
-    </footer>
-</div>
+<footer class="w3-container w3-theme" style="padding:32px">
+    <p>Created by [Your Name]</p>
+</footer>
 
 <script>
+function w3_open() {
+    document.getElementById("mySidebar").style.display = "block";
+}
+
 function w3_close() {
     document.getElementById("mySidebar").style.display = "none";
-    document.getElementById("myOverlay").style.display = "none";
 }
+
+window.onscroll = function() {
+    if (document.body.scrollTop > 80 || document.documentElement.scrollTop > 80) {
+        document.getElementById("intro").classList.add("w3-card-4", "w3-animate-opacity");
+    } else {
+        document.getElementById("intro").classList.remove("w3-card-4", "w3-animate-opacity");
+    }
+};
 </script>
 
 </body>
