@@ -36,16 +36,17 @@
     </div>
     <div id="status">Waiting for speaker detection...</div>
     
+    <img id="video-feed" src="https://cvmc.onrender.com" width="640" height="480">
+
     <script>
         function updateStatus() {
-            fetch('http://localhost:5000/speaker_status')
+            fetch('https://cvmc.onrender.com')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('status').innerText = data.status;
                 })
                 .catch(error => console.error('Error fetching speaker status:', error));
         }
-        
         setInterval(updateStatus, 1000);
     </script>
 </body>
