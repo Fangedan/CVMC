@@ -3,15 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Speaker Detection</title>
+    <title>Live Speaker Detection Presentation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f4f4f4;
+            padding: 20px;
         }
         h1 {
             margin-top: 20px;
+        }
+        h2 {
+            margin-top: 30px;
+        }
+        section {
+            margin-top: 30px;
+            text-align: left;
         }
         #video-container {
             display: flex;
@@ -21,6 +29,8 @@
         img {
             border: 2px solid black;
             border-radius: 10px;
+            max-width: 100%;
+            height: auto;
         }
         #status {
             font-size: 20px;
@@ -31,11 +41,58 @@
 </head>
 <body>
     <h1>Live Speaker Detection</h1>
-    <div id="video-container">
-        <img id="video-feed" src="https://cvmc.onrender.com" width="640" height="480">
-    </div>
-    <div id="status">Waiting for speaker detection...</div>
-
+    
+    <section id="intro">
+        <h2>Introduction to Computer Vision and Multimodal Computing</h2>
+        <p>
+            Computer vision and multimodal computing involve the study and development of algorithms that enable machines to interpret and understand visual and sensory information from the world around them.
+        </p>
+        <!-- Insert images/videos demonstrating computer vision -->
+        <div id="cv-images">
+            <!-- Placeholder for images or videos -->
+        </div>
+    </section>
+    
+    <section id="speaker-detection">
+        <h2>Live Speaker Detection</h2>
+        <p>
+            Live Speaker Detection utilizes computer vision techniques to identify and track the active speaker in a live video stream. This project leverages deep learning models and real-time processing to achieve accurate speaker detection.
+        </p>
+        <div id="video-container">
+            <!-- Insert video of detect_speaker_live.py program (provided by user) -->
+            <video id="video-feed" controls>
+                <source src="path_to_your_video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div id="status">Waiting for speaker detection...</div>
+    </section>
+    
+    <section id="uses">
+        <h2>Uses and Applications</h2>
+        <p>
+            Active speaker detection has diverse applications, including real-time transcription, video conferencing enhancements, accessibility tools for the hearing-impaired, and more. It significantly improves user interaction and accessibility in multimedia environments.
+        </p>
+        <!-- Insert images/videos demonstrating uses -->
+        <div id="uses-images">
+            <!-- Placeholder for images or videos -->
+        </div>
+    </section>
+    
+    <section id="learnings">
+        <h2>What I Learned</h2>
+        <p>
+            As a solo developer, completing this project taught me valuable skills in deep learning model deployment, real-time data processing, and user interface design for multimedia applications.
+        </p>
+    </section>
+    
+    <section id="possibilities">
+        <h2>Future Possibilities</h2>
+        <p>
+            The active speaker detection software created opens up possibilities for further research and development in automated video analysis, interactive media, and personalized user experiences across various domains.
+        </p>
+    </section>
+    
     <script>
         function updateStatus() {
             fetch('https://cvmc.onrender.com')
