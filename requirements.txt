@@ -9,7 +9,7 @@ torchvision
 youtube-dl
 tensorboard
 python_speech_features
-Flask==2.0.1
+
 whisper==1.0.0
 ffmpeg-python==0.2.0
 
