@@ -18,6 +18,10 @@
     <input type="number" id="timeOffset" value="0" step="0.1">
     
     <br/><br/>
+    <input type="checkbox" id="transcriptCheckbox">
+    <label for="transcriptCheckbox">Include Transcript (.txt)</label>
+    
+    <br/><br/>
     <button id="downloadButton" disabled>Download Video with Subtitles</button>
     
     <script>
@@ -30,6 +34,7 @@
         const stopButton = document.getElementById('stopButton');
         const downloadButton = document.getElementById('downloadButton');
         const timeOffsetInput = document.getElementById('timeOffset');
+        const transcriptCheckbox = document.getElementById('transcriptCheckbox');
 
         // Start recording when the button is clicked
         startButton.addEventListener('click', async () => {
@@ -69,6 +74,8 @@
             formData.append('video', blob, 'video.mp4');
             formData.append('timeOffset', timeOffsetInput.value);
 
+            const includeTranscript = transcriptCheckbox.checked;
+
             fetch('/process-video', {
                 method: 'POST',
                 body: formData
@@ -76,14 +83,37 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = data.videoURL;
-                    downloadLink.download = 'video_with_subtitles.mp4';
-                    downloadLink.click();
+                    if (includeTranscript && data.transcriptURL) {
+                        downloadVideoWithTranscript(data.videoURL, data.transcriptURL);
+                    } else {
+                        downloadVideoWithoutTranscript(data.videoURL);
+                    }
                 } else {
                     alert('Error processing video.');
                 }
             });
+        }
+
+        // Function to download video with transcript
+        function downloadVideoWithTranscript(videoURL, transcriptURL) {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = videoURL;
+            downloadLink.download = 'video_with_subtitles.mp4';
+            downloadLink.click();
+
+            // Optionally download transcript
+            const transcriptDownloadLink = document.createElement('a');
+            transcriptDownloadLink.href = transcriptURL;
+            transcriptDownloadLink.download = 'transcript.txt';
+            transcriptDownloadLink.click();
+        }
+
+        // Function to download video without transcript
+        function downloadVideoWithoutTranscript(videoURL) {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = videoURL;
+            downloadLink.download = 'video_with_subtitles.mp4';
+            downloadLink.click();
         }
     </script>
 </body>
