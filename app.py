@@ -1,110 +1,102 @@
 import os
-import time
-from flask import Flask, request, jsonify, send_file
-import torch
-import cv2
-import numpy as np
-from moviepy.editor import VideoFileClip
+import uuid
+from flask import Flask, request, jsonify, send_from_directory
+from moviepy.editor import VideoFileClip, TextClip, concatenate_videoclips
 import speech_recognition as sr
-from torchvision import models, transforms
 
 app = Flask(__name__)
 
-# Ensure necessary directories exist
-os.makedirs('uploads', exist_ok=True)
-os.makedirs('processed_videos', exist_ok=True)
-
-# Initialize the pre-trained ResNet model
-model = models.resnet18(pretrained=True)
-model.eval()
-
-# Load OpenCV face detection classifier
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-# Initialize recognizer for speech-to-text
-recognizer = sr.Recognizer()
+UPLOAD_FOLDER = 'uploads'
+OUTPUT_FOLDER = 'outputs'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 @app.route('/process-video', methods=['POST'])
 def process_video():
-    # Get the uploaded video
+    if 'video' not in request.files:
+        return jsonify({"success": False, "message": "No video file uploaded"}), 400
+    
     video_file = request.files['video']
     time_offset = float(request.form.get('timeOffset', 0))
     
-    # Save video to a temporary file
-    video_path = os.path.join('uploads', 'video.mp4')
-    video_file.save(video_path)
+    # Save the uploaded video
+    video_filename = os.path.join(UPLOAD_FOLDER, f"{uuid.uuid4().hex}.mp4")
+    video_file.save(video_filename)
     
-    # Process video for face detection, transcription, and subtitle generation
-    transcription, timestamps = process_video_with_transcription(video_path, time_offset)
-
-    # Generate a unique output video filename
-    output_video_path = os.path.join('processed_videos', f'video_{int(time.time())}.mp4')
-
-    # Add subtitles to the video
-    output_video_path = add_subtitles_to_video(video_path, transcription, timestamps, output_video_path)
-
+    # Process the video: Generate transcript and video with subtitles
+    transcript, transcript_filename = generate_transcript(video_filename)
+    video_with_subtitles_filename = generate_video_with_subtitles(video_filename, transcript, time_offset)
+    
+    # Provide both download links
     return jsonify({
-        'success': True,
-        'videoURL': output_video_path
+        "success": True,
+        "videoURL": f'/download/{video_with_subtitles_filename}',
+        "transcriptURL": f'/download/{transcript_filename}'
     })
 
-def process_video_with_transcription(video_path, time_offset):
-    cap = cv2.VideoCapture(video_path)
+
+def generate_transcript(video_filename):
+    # Use speech_recognition library to transcribe the audio
+    recognizer = sr.Recognizer()
+    audio_filename = video_filename.replace('.mp4', '.wav')
+
+    # Extract audio from video
+    clip = VideoFileClip(video_filename)
+    clip.audio.write_audiofile(audio_filename)
     
-    transcription = []
-    timestamps = []
-    last_transcription_time = time.time() - time_offset
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-        max_confidence = -1
-        active_face = None
-
-        # Detect the face with the highest confidence
-        for (x, y, w, h) in faces:
-            face = frame[y:y+h, x:x+w]
-            input_face = cv2.resize(face, (224, 224))
-            input_face = input_face.astype(np.float32) / 255.0
-            input_face = input_face.transpose((2, 0, 1))
-            input_tensor = torch.tensor(input_face).float()
-            input_tensor = input_tensor.unsqueeze(0)
-
-            with torch.no_grad():
-                output = model(input_tensor)
-                _, predicted_class = torch.max(output, 1)
-                confidence = torch.softmax(output, dim=1)[0][predicted_class].item()
-
-            if confidence > max_confidence:
-                max_confidence = confidence
-                active_face = (x, y, w, h, predicted_class, confidence)
-
-        # Capture the transcription using speech recognition
-        with sr.Microphone() as source:
-            audio = recognizer.listen(source, timeout=5)
+    # Transcribe the audio
+    transcript = []
+    with sr.AudioFile(audio_filename) as source:
+        audio = recognizer.record(source)
         try:
-            transcription_text = recognizer.recognize_google(audio)
-            timestamps.append(time.time() - last_transcription_time)
-            transcription.append(transcription_text)
+            text = recognizer.recognize_google(audio)
+            transcript.append(f"0.0s - {text}")
         except Exception as e:
-            print(f"Error: {e}")
-    
-    cap.release()
-    return transcription, timestamps
+            transcript.append(f"Error: {str(e)}")
 
-def add_subtitles_to_video(video_path, transcription, timestamps, output_video_path):
-    clip = VideoFileClip(video_path)
-    # Create a subtitles clip or overlay and add it to the video
-    # (You can use the moviepy library to overlay text as subtitles)
-    # For simplicity, let's assume we just add the transcription text as subtitles in the video
-    # Add subtitles processing here
-    clip.write_videofile(output_video_path, codec="libx264")
-    return output_video_path
+    transcript_filename = f"transcript_{uuid.uuid4().hex}.txt"
+    transcript_path = os.path.join(OUTPUT_FOLDER, transcript_filename)
+    
+    # Write transcript to a file
+    with open(transcript_path, 'w') as f:
+        for entry in transcript:
+            f.write(f"{entry}\n")
+    
+    return transcript, transcript_filename
+
+
+def generate_video_with_subtitles(video_filename, transcript, time_offset):
+    # Generate video with subtitles using moviepy
+    clip = VideoFileClip(video_filename)
+    video_duration = clip.duration
+
+    # Create subtitle clips for each line in the transcript
+    subtitle_clips = []
+    for line in transcript:
+        timestamp, text = line.split(' - ', 1)
+        timestamp = float(timestamp[:-1]) + time_offset  # Adjust with time offset
+        
+        # Create TextClip for the subtitle
+        subtitle = TextClip(text, fontsize=24, color='white', bg_color='black', size=clip.size)
+        subtitle = subtitle.set_position(('center', 'bottom')).set_duration(video_duration - timestamp).set_start(timestamp)
+        subtitle_clips.append(subtitle)
+    
+    # Combine the video with the subtitles
+    final_clip = clip
+    final_clip = concatenate_videoclips([final_clip.set_duration(video_duration)]).fx(vfx.composite, *subtitle_clips)
+
+    # Save the final video
+    video_with_subtitles_filename = f"video_with_subtitles_{uuid.uuid4().hex}.mp4"
+    video_with_subtitles_path = os.path.join(OUTPUT_FOLDER, video_with_subtitles_filename)
+    final_clip.write_videofile(video_with_subtitles_path, codec='libx264')
+
+    return video_with_subtitles_filename
+
+
+@app.route('/download/<filename>')
+def download(filename):
+    return send_from_directory(OUTPUT_FOLDER, filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

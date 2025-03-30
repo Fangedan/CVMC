@@ -65,11 +65,11 @@
             videoElement.src = videoURL;
 
             downloadButton.disabled = false;
-            downloadButton.onclick = () => downloadVideo(blob);
+            downloadButton.onclick = () => uploadAndProcessVideo(blob);
         }
 
-        // Function to download video with subtitles (to be handled by backend)
-        function downloadVideo(blob) {
+        // Function to upload video and get processed results (video with subtitles and transcript)
+        function uploadAndProcessVideo(blob) {
             const formData = new FormData();
             formData.append('video', blob, 'video.mp4');
             formData.append('timeOffset', timeOffsetInput.value);
