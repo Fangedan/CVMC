@@ -1,0 +1,37 @@
+name: Process Video and Upload to GitHub Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - videos/*  # Trigger the workflow when a video is pushed to the 'videos' folder
+
+jobs:
+  process_video:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Install necessary dependencies (e.g., FFmpeg for video processing)
+      - name: Install FFmpeg
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg
+
+      # Step 3: Process the uploaded video (e.g., adding subtitles)
+      - name: Process video
+        run: |
+          # Example: Adding subtitles or processing video with FFmpeg
+          ffmpeg -i videos/input_video.mp4 -vf "subtitles=videos/subtitles.srt" videos/processed_video.mp4
+
+      # Step 4: Upload processed video to GitHub Release
+      - name: Create GitHub Release and Upload Processed Video
+        uses: softprops/action-gh-release@v1
+        with:
+          files: videos/processed_video.mp4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

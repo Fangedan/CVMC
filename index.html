@@ -24,11 +24,12 @@
     <br/><br/>
     <button id="downloadButton" disabled>Download Video with Subtitles</button>
     
+    <div id="downloadLinks"></div>
+
     <script>
         let mediaRecorder;
         let recordedChunks = [];
 
-        // Setup the video preview
         const videoPreview = document.getElementById('videoPreview');
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
@@ -36,7 +37,6 @@
         const timeOffsetInput = document.getElementById('timeOffset');
         const transcriptCheckbox = document.getElementById('transcriptCheckbox');
 
-        // Start recording when the button is clicked
         startButton.addEventListener('click', async () => {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             videoPreview.srcObject = stream;
@@ -50,14 +50,12 @@
             stopButton.disabled = false;
         });
 
-        // Stop recording when the button is clicked
         stopButton.addEventListener('click', () => {
             mediaRecorder.stop();
             startButton.disabled = false;
             stopButton.disabled = true;
         });
 
-        // Handle stopping of recording and trigger download button
         function handleStopRecording() {
             const blob = new Blob(recordedChunks, { type: 'video/mp4' });
             const videoURL = URL.createObjectURL(blob);
@@ -68,76 +66,50 @@
             downloadButton.onclick = () => uploadAndProcessVideo(blob);
         }
 
-        // Function to upload video and get processed results (video with subtitles and transcript)
-        // Function to handle server-side processing and get downloadable links
         function uploadAndProcessVideo(blob) {
-           const formData = new FormData();
-           formData.append('video', blob, 'video.mp4');
+            const formData = new FormData();
+            formData.append('video', blob, 'video.mp4');
             formData.append('timeOffset', timeOffsetInput.value);
 
             const includeTranscript = transcriptCheckbox.checked;
 
-           fetch('/process-video', {
+            fetch('/process-video', {  // This will be handled by GitHub Actions
                 method: 'POST',
                 body: formData
             })
-           .then(response => response.json())
-           .then(data => {
-              if (data.success) {
-                  if (includeTranscript && data.transcriptURL) {
-                      // Show download links to the user
-                     const videoDownloadLink = document.createElement('a');
-                      videoDownloadLink.href = data.videoURL;
-                      videoDownloadLink.textContent = 'Download Video with Subtitles';
-                      videoDownloadLink.download = 'video_with_subtitles.mp4';
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (includeTranscript && data.transcriptURL) {
+                        const videoDownloadLink = document.createElement('a');
+                        videoDownloadLink.href = data.videoURL;
+                        videoDownloadLink.textContent = 'Download Video with Subtitles';
+                        videoDownloadLink.download = 'video_with_subtitles.mp4';
 
-                      const transcriptDownloadLink = document.createElement('a');
-                     transcriptDownloadLink.href = data.transcriptURL;
-                     transcriptDownloadLink.textContent = 'Download Transcript';
-                     transcriptDownloadLink.download = 'transcript.txt';
+                        const transcriptDownloadLink = document.createElement('a');
+                        transcriptDownloadLink.href = data.transcriptURL;
+                        transcriptDownloadLink.textContent = 'Download Transcript';
+                        transcriptDownloadLink.download = 'transcript.txt';
 
-                     const downloadContainer = document.getElementById('downloadLinks');
-                     downloadContainer.innerHTML = '';
-                     downloadContainer.appendChild(videoDownloadLink);
-                      downloadContainer.appendChild(document.createElement('br'));
-                      downloadContainer.appendChild(transcriptDownloadLink);
-                  } else {
-                      // Show only video download link
-                       const videoDownloadLink = document.createElement('a');
-                       videoDownloadLink.href = data.videoURL;
-                      videoDownloadLink.textContent = 'Download Video with Subtitles';
-                      videoDownloadLink.download = 'video_with_subtitles.mp4';
+                        const downloadContainer = document.getElementById('downloadLinks');
+                        downloadContainer.innerHTML = '';
+                        downloadContainer.appendChild(videoDownloadLink);
+                        downloadContainer.appendChild(document.createElement('br'));
+                        downloadContainer.appendChild(transcriptDownloadLink);
+                    } else {
+                        const videoDownloadLink = document.createElement('a');
+                        videoDownloadLink.href = data.videoURL;
+                        videoDownloadLink.textContent = 'Download Video with Subtitles';
+                        videoDownloadLink.download = 'video_with_subtitles.mp4';
 
-                     const downloadContainer = document.getElementById('downloadLinks');
-                      downloadContainer.innerHTML = '';
-                     downloadContainer.appendChild(videoDownloadLink);
-                  }
-              } else {
-                   alert('Error processing video.');
-              }
-          });
-        }
-
-        // Function to download video with transcript
-        function downloadVideoWithTranscript(videoURL, transcriptURL) {
-            const downloadLink = document.createElement('a');
-            downloadLink.href = videoURL;
-            downloadLink.download = 'video_with_subtitles.mp4';
-            downloadLink.click();
-
-            // Optionally download transcript
-            const transcriptDownloadLink = document.createElement('a');
-            transcriptDownloadLink.href = transcriptURL;
-            transcriptDownloadLink.download = 'transcript.txt';
-            transcriptDownloadLink.click();
-        }
-
-        // Function to download video without transcript
-        function downloadVideoWithoutTranscript(videoURL) {
-            const downloadLink = document.createElement('a');
-            downloadLink.href = videoURL;
-            downloadLink.download = 'video_with_subtitles.mp4';
-            downloadLink.click();
+                        const downloadContainer = document.getElementById('downloadLinks');
+                        downloadContainer.innerHTML = '';
+                        downloadContainer.appendChild(videoDownloadLink);
+                    }
+                } else {
+                    alert('Error processing video.');
+                }
+            });
         }
     </script>
 </body>
