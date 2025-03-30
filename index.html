@@ -3,114 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Recorder with Transcription</title>
+    <title>Live Speaker Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #video-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        video {
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+        #status {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Record Your Video</h1>
+    <h1>Live Speaker Detection</h1>
+    <div id="video-container">
+        <img id="video-feed" src="/video_feed" width="640" height="480">
+    </div>
+    <div id="status">Waiting for speaker detection...</div>
     
-    <video id="videoPreview" width="640" height="480" autoplay muted></video>
-    <br/>
-    <button id="startButton">Start Recording</button>
-    <button id="stopButton" disabled>Stop Recording</button>
-    
-    <br/>
-    <label for="timeOffset">Adjust Time Offset (in seconds):</label>
-    <input type="number" id="timeOffset" value="0" step="0.1">
-    
-    <br/><br/>
-    <input type="checkbox" id="transcriptCheckbox">
-    <label for="transcriptCheckbox">Include Transcript (.txt)</label>
-    
-    <br/><br/>
-    <button id="downloadButton" disabled>Download Video with Subtitles</button>
-    
-    <div id="downloadLinks"></div>
-
     <script>
-        let mediaRecorder;
-        let recordedChunks = [];
-
-        const videoPreview = document.getElementById('videoPreview');
-        const startButton = document.getElementById('startButton');
-        const stopButton = document.getElementById('stopButton');
-        const downloadButton = document.getElementById('downloadButton');
-        const timeOffsetInput = document.getElementById('timeOffset');
-        const transcriptCheckbox = document.getElementById('transcriptCheckbox');
-
-        startButton.addEventListener('click', async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            videoPreview.srcObject = stream;
-            
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data);
-            mediaRecorder.onstop = handleStopRecording;
-            mediaRecorder.start();
-
-            startButton.disabled = true;
-            stopButton.disabled = false;
-        });
-
-        stopButton.addEventListener('click', () => {
-            mediaRecorder.stop();
-            startButton.disabled = false;
-            stopButton.disabled = true;
-        });
-
-        function handleStopRecording() {
-            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-            const videoURL = URL.createObjectURL(blob);
-            const videoElement = document.createElement('video');
-            videoElement.src = videoURL;
-
-            downloadButton.disabled = false;
-            downloadButton.onclick = () => uploadAndProcessVideo(blob);
+        function updateStatus() {
+            fetch('/speaker_status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                })
+                .catch(error => console.error('Error fetching speaker status:', error));
         }
-
-        function uploadAndProcessVideo(blob) {
-            const formData = new FormData();
-            formData.append('video', blob, 'video.mp4');
-            formData.append('timeOffset', timeOffsetInput.value);
-
-            const includeTranscript = transcriptCheckbox.checked;
-
-            fetch('/process-video', {  // This will be handled by GitHub Actions
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (includeTranscript && data.transcriptURL) {
-                        const videoDownloadLink = document.createElement('a');
-                        videoDownloadLink.href = data.videoURL;
-                        videoDownloadLink.textContent = 'Download Video with Subtitles';
-                        videoDownloadLink.download = 'video_with_subtitles.mp4';
-
-                        const transcriptDownloadLink = document.createElement('a');
-                        transcriptDownloadLink.href = data.transcriptURL;
-                        transcriptDownloadLink.textContent = 'Download Transcript';
-                        transcriptDownloadLink.download = 'transcript.txt';
-
-                        const downloadContainer = document.getElementById('downloadLinks');
-                        downloadContainer.innerHTML = '';
-                        downloadContainer.appendChild(videoDownloadLink);
-                        downloadContainer.appendChild(document.createElement('br'));
-                        downloadContainer.appendChild(transcriptDownloadLink);
-                    } else {
-                        const videoDownloadLink = document.createElement('a');
-                        videoDownloadLink.href = data.videoURL;
-                        videoDownloadLink.textContent = 'Download Video with Subtitles';
-                        videoDownloadLink.download = 'video_with_subtitles.mp4';
-
-                        const downloadContainer = document.getElementById('downloadLinks');
-                        downloadContainer.innerHTML = '';
-                        downloadContainer.appendChild(videoDownloadLink);
-                    }
-                } else {
-                    alert('Error processing video.');
-                }
-            });
-        }
+        
+        setInterval(updateStatus, 1000); // Update speaker status every second
     </script>
 </body>
 </html>
