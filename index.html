@@ -69,29 +69,53 @@
         }
 
         // Function to upload video and get processed results (video with subtitles and transcript)
+        // Function to handle server-side processing and get downloadable links
         function uploadAndProcessVideo(blob) {
-            const formData = new FormData();
-            formData.append('video', blob, 'video.mp4');
+           const formData = new FormData();
+           formData.append('video', blob, 'video.mp4');
             formData.append('timeOffset', timeOffsetInput.value);
 
             const includeTranscript = transcriptCheckbox.checked;
 
-            fetch('/process-video', {
+           fetch('/process-video', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (includeTranscript && data.transcriptURL) {
-                        downloadVideoWithTranscript(data.videoURL, data.transcriptURL);
-                    } else {
-                        downloadVideoWithoutTranscript(data.videoURL);
-                    }
-                } else {
-                    alert('Error processing video.');
-                }
-            });
+           .then(response => response.json())
+           .then(data => {
+              if (data.success) {
+                  if (includeTranscript && data.transcriptURL) {
+                      // Show download links to the user
+                     const videoDownloadLink = document.createElement('a');
+                      videoDownloadLink.href = data.videoURL;
+                      videoDownloadLink.textContent = 'Download Video with Subtitles';
+                      videoDownloadLink.download = 'video_with_subtitles.mp4';
+
+                      const transcriptDownloadLink = document.createElement('a');
+                     transcriptDownloadLink.href = data.transcriptURL;
+                     transcriptDownloadLink.textContent = 'Download Transcript';
+                     transcriptDownloadLink.download = 'transcript.txt';
+
+                     const downloadContainer = document.getElementById('downloadLinks');
+                     downloadContainer.innerHTML = '';
+                     downloadContainer.appendChild(videoDownloadLink);
+                      downloadContainer.appendChild(document.createElement('br'));
+                      downloadContainer.appendChild(transcriptDownloadLink);
+                  } else {
+                      // Show only video download link
+                       const videoDownloadLink = document.createElement('a');
+                       videoDownloadLink.href = data.videoURL;
+                      videoDownloadLink.textContent = 'Download Video with Subtitles';
+                      videoDownloadLink.download = 'video_with_subtitles.mp4';
+
+                     const downloadContainer = document.getElementById('downloadLinks');
+                      downloadContainer.innerHTML = '';
+                     downloadContainer.appendChild(videoDownloadLink);
+                  }
+              } else {
+                   alert('Error processing video.');
+              }
+          });
         }
 
         // Function to download video with transcript
