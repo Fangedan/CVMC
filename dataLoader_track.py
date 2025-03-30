@@ -38,8 +38,8 @@ Classes:
 Usage:
 - Used for preprocessing audiovisual datasets for deep learning models.
 - Ensures proper alignment of audio and video features.
-
 """
+
 import os, torch, numpy, cv2, random, glob, python_speech_features
 from scipy.io import wavfile
 from torchvision.transforms import RandomCrop
@@ -50,7 +50,7 @@ def generate_audio_set(dataPath, batchList):
     audioSet = {}
     for line in batchList:
         data = line.replace(":", "_").split('\t')
-        videoName = data[0][:11]
+        videoName = data[0][:13]
         dataName = data[0]
         audioFilePath = os.path.join(dataPath, videoName, dataName + '.wav')
 
@@ -76,7 +76,7 @@ def load_audio(data, dataPath, numFrames, audioSet = None):
 
 def load_visual(data, dataPath, numFrames, visualAug): 
     dataName = data[0]
-    videoName = data[0][:11]
+    videoName = data[0][:13]
     faceFolderPath = os.path.join(dataPath, videoName, dataName)
     faceFiles = glob.glob("%s/*.jpg"%faceFolderPath)
     sortedFaceFiles = sorted(faceFiles, key=lambda data: (float(data.split('/')[-1][:-4])), reverse=False) 
