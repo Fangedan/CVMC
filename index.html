@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Recorder with Transcription</title>
+</head>
+<body>
+    <h1>Record Your Video</h1>
+    
+    <video id="videoPreview" width="640" height="480" autoplay muted></video>
+    <br/>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    
+    <br/>
+    <label for="timeOffset">Adjust Time Offset (in seconds):</label>
+    <input type="number" id="timeOffset" value="0" step="0.1">
+    
+    <br/><br/>
+    <button id="downloadButton" disabled>Download Video with Subtitles</button>
+    
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        // Setup the video preview
+        const videoPreview = document.getElementById('videoPreview');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const timeOffsetInput = document.getElementById('timeOffset');
+
+        // Start recording when the button is clicked
+        startButton.addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            videoPreview.srcObject = stream;
+            
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data);
+            mediaRecorder.onstop = handleStopRecording;
+            mediaRecorder.start();
+
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        });
+
+        // Stop recording when the button is clicked
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
+
+        // Handle stopping of recording and trigger download button
+        function handleStopRecording() {
+            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+            const videoURL = URL.createObjectURL(blob);
+            const videoElement = document.createElement('video');
+            videoElement.src = videoURL;
+
+            downloadButton.disabled = false;
+            downloadButton.onclick = () => downloadVideo(blob);
+        }
+
+        // Function to download video with subtitles (to be handled by backend)
+        function downloadVideo(blob) {
+            const formData = new FormData();
+            formData.append('video', blob, 'video.mp4');
+            formData.append('timeOffset', timeOffsetInput.value);
+
+            fetch('/process-video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = data.videoURL;
+                    downloadLink.download = 'video_with_subtitles.mp4';
+                    downloadLink.click();
+                } else {
+                    alert('Error processing video.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
